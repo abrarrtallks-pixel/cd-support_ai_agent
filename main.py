@@ -5,16 +5,19 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return "AI Support Bot Running!"
+    return "Support AI Agent Running 🚀"
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    data = request.json
-    user_message = data.get("message")
+    data = request.get_json()
+    user_message = data.get("message", "")
 
-    response = handle_user_message(user_message)
+    if not user_message:
+        return jsonify({"error": "Message required"}), 400
 
-    return jsonify({"response": response})
+    result = handle_user_message(user_message)
+
+    return jsonify(result)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    app.run(host="0.0.0.0", port=5000)
