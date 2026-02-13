@@ -460,3 +460,78 @@ Source: {doc['source']}
         return """I apologize, but I'm experiencing technical difficulties right now. 
 Let me connect you with a human agent who can help you immediately. 
 Your conversation has been saved and they'll have full context."""
+        # ================================
+# SIMPLE WRAPPER FOR FLASK
+# ================================
+
+import asyncio
+
+# Dummy Services (Temporary)
+class DummyService:
+    async def analyze(self, *args, **kwargs):
+        return {"score": 0.1, "label": "neutral", "escalation_probability": 0.1}
+
+    async def retrieve_relevant_context(self, *args, **kwargs):
+        return {"documents": [], "sources": []}
+
+    async def add_message(self, *args, **kwargs):
+        pass
+
+    async def get_conversation_history(self, *args, **kwargs):
+        return []
+
+    async def validate_response(self, response, context):
+        return {"content": response["content"], "confidence": 1.0}
+
+    async def track_interaction(self, *args, **kwargs):
+        pass
+
+    async def track_error(self, *args, **kwargs):
+        pass
+
+    async def create_ticket(self, *args, **kwargs):
+        return {
+            "message_to_user": "Your issue has been escalated.",
+            "ticket_id": "TICKET123",
+            "estimated_wait_time": "5 minutes"
+        }
+
+class DummyLLM:
+    async def generate(self, prompt, tools=None, temperature=0.3, max_tokens=1000):
+        return {"content": "AI Response: Thank you for your message.", "confidence": 0.9}
+
+class DummyTools:
+    def get_tool_definitions(self):
+        return []
+
+    async def execute(self, *args, **kwargs):
+        return {}
+
+# Create orchestrator instance
+orchestrator = AgentOrchestrator(
+    llm_service=DummyLLM(),
+    memory_service=DummyService(),
+    rag_service=DummyService(),
+    tool_registry=DummyTools(),
+    sentiment_analyzer=DummyService(),
+    guardrail_service=DummyService(),
+    escalation_service=DummyService(),
+    analytics_service=DummyService()
+)
+
+# Flask compatible function
+def handle_user_message(message: str):
+    context = ConversationContext(
+        conversation_id="demo",
+        user_id="user1",
+        session_id="session1",
+        messages=[{"role": "user", "content": message}],
+        user_profile={},
+        sentiment_score=0.0,
+        escalation_score=0.0,
+        metadata={},
+        created_at=datetime.now(),
+        updated_at=datetime.now()
+    )
+
+    return asyncio.run(orchestrator.process_message(message, context))
